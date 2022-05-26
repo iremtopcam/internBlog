@@ -195,6 +195,16 @@ def getArticle():
         return make_response(jsonify(articles))
 
 
+@app.route('/getArticlebyid', methods=["POST"])
+def getArticlebyid():
+    if request.method == "POST":
+        id = request.json['id']
+        article = Article.objects.get(id=id)
+
+        return make_response(jsonify(article))
+
+
+
 @app.route('/updateArticle', methods=['POST'])
 @token_required
 def updateArticle(currentUser):
@@ -226,21 +236,31 @@ def upvote(currentUser):
 
                 article.update(vote=vote,
                                upvotes=upvotes, downvotes=downvotes)
-                return {"message": "Oy kullanılmış upvote"}
+                #oy kullanılmış upvote
+                return make_response(jsonify(vote))
             else:
                 if currentUser["username"] in downvotes:
                     downvotes.remove(currentUser["username"])
+                    
+                    upvotes.append(currentUser["username"])
 
-                upvotes.append(currentUser["username"])
+                    vote = len(upvotes)-len(downvotes)
 
-                vote = len(upvotes)-len(downvotes)
-
-                article.update(vote=vote,
+                    article.update(vote=vote,
                                upvotes=upvotes, downvotes=downvotes)
 
-                # bir kullanıcının birden fazla oy kullanmasın
+                    return make_response(jsonify(vote))
+                else:
+                    upvotes.append(currentUser["username"])
 
-                return make_response(jsonify(article.vote))
+                    vote = len(upvotes)-len(downvotes)
+
+                    article.update(vote=vote,
+                                upvotes=upvotes, downvotes=downvotes)
+
+                    # bir kullanıcının birden fazla oy kullanmasın
+
+                    return make_response(jsonify(vote))
 
         except:
             return {'message': 'warning'}
@@ -254,26 +274,38 @@ def downvote(currentUser):
         article = Article.objects.get(id=_id)
         upvotes = article["upvotes"]
         downvotes = article["downvotes"]
-        if currentUser["username"] in downvotes:
-            downvotes.remove(currentUser["username"])
-            vote = len(upvotes)-len(downvotes)
+        try:
+            if currentUser["username"] in downvotes:
+                downvotes.remove(currentUser["username"])
+                vote = len(upvotes)-len(downvotes)
 
-            article.update(vote=vote,
-                           upvotes=upvotes, downvotes=downvotes)
-            return {"message": "Oy kullanılmış downvote"}
-        else:
-            if currentUser["username"] in upvotes:
-                upvotes.remove(currentUser["username"])
+                article.update(vote=vote,
+                            upvotes=upvotes, downvotes=downvotes)
+                #oy kullanılmış downvote
+                return make_response(jsonify(vote))
+            else:
+                if currentUser["username"] in upvotes:
+                    upvotes.remove(currentUser["username"])
+                    downvotes.append(currentUser["username"])
 
-            downvotes.append(currentUser["username"])
+                    vote = len(upvotes)-len(downvotes)
+                    article.update(vote=vote,
+                                upvotes=upvotes, downvotes=downvotes)
 
-            vote = len(upvotes)-len(downvotes)
-            article.update(vote=vote,
-                           upvotes=upvotes, downvotes=downvotes)
+                    return make_response(jsonify(vote))
+                else:
 
-            # bir kullanıcının birden fazla oy kullanmasın
+                    downvotes.append(currentUser["username"])
 
-            return make_response(jsonify(article.vote))
+                    vote = len(upvotes)-len(downvotes)
+                    article.update(vote=vote,
+                                upvotes=upvotes, downvotes=downvotes)
+
+                    # bir kullanıcının birden fazla oy kullanmasın
+
+                    return make_response(jsonify(vote))
+        except:
+            return {'message': 'warning'}
 
 
 @app.route('/deleteArticle', methods=['POST', "GET"])

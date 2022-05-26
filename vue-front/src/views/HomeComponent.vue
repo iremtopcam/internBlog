@@ -24,8 +24,12 @@
               <tbody>
                 <tr v-for="(item, index) in items" :key="index">
                   <th scope="row">{{ item.vote }}</th>
-                  <td>{{ item.title }}</td>
-                  <td>{{ item.description }}</td>
+                  <td><a v-bind:href="'/article/'+ item._id.$oid">
+    <div style="height:100%;width:100%">
+      {{ item.title }}
+    </div>
+  </a></td>
+                  <td>{{ item.description.substring(0,60) }}...<a v-bind:href="'/article/'+ item._id.$oid">click for more</a></td>
                   <td>{{ item.author }}</td>
                   <td v-if="logged">
                     <button @click="Upvote(item._id.$oid)" class="btn btn-success">

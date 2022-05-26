@@ -4,6 +4,7 @@ import RegisterComponent from '@/views/RegisterComponent.vue'
 import LoginComponent from '@/views/LoginComponent.vue'
 import DashboardComponent from '@/views/DashboardComponent.vue'
 import aboutComponent from '@/views/aboutComponent.vue'
+import articleComponent from '@/views/articleComponent.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {path:'/',component:HomeComponent},
@@ -11,6 +12,7 @@ const routes: Array<RouteRecordRaw> = [
   {path:'/register',component:RegisterComponent},
   {path:'/dashboard',component:DashboardComponent},
   {path:'/about',component:aboutComponent},
+  {path:'/article/:id',component:articleComponent},
 ]
 
 const router = createRouter({
