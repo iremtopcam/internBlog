@@ -14,14 +14,27 @@
         <button class="btn btn-success block" type="submit">Ekle</button>
       </form>
     </div>
-    <hr>
+    <br>
     <h2>Delete Article</h2>
+    <hr>
+    <div class="container" align="center">
+      <label for="cars">Choose your article:</label>
+
+      <select v-model="selected" name="cars" id="cars">
+        <option v-for="article in articles" v-bind:key="article.author"
+          v-bind:value="{ id: article._id, text: article.title }">
+          {{ article.title }}
+        </option>
+      </select>
+      <button class="btn btn-danger" type="submit" @click="deleteSubmit">Sil</button>
+    </div>
+    <br><br>
   </section>
 </template>
 
 <script lang="ts">
 const api_url = "http://localhost:5000/"
-import { onMounted, reactive } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import axios from "axios";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
@@ -34,61 +47,84 @@ export default {
       description: "",
     });
 
+    const articles = ref()
+    const selected = ref()
+
     const token = localStorage.getItem("token");
     const store = useStore();
     const router = useRouter();
-    onMounted(()=>{
-        axios.get(api_url+"getUser",{
-          headers: {
+    onMounted(() => {
+      axios.get(api_url + "getUser", {
+        headers: {
           'token': `${token}`
-  }
-        }).then((response)=>{
-          if (response.data){
-            console.log(response.data.author)
-            store.dispatch('setAuth',true)
-            if(response.data.author){
-              store.dispatch('setAuthor',true)
-            }else{
-              store.dispatch('setAuthor',false)
-            }
-          }else{
-            store.dispatch('setAuth',false)
+        }
+      }).then((response) => {
+        if (response.data) {
+          console.log(response.data.author)
+          store.dispatch('setAuth', true)
+          if (response.data.author) {
+            store.dispatch('setAuthor', true)
+          } else {
+            store.dispatch('setAuthor', false)
           }
-          
-        }).catch(c=>{
-          console.log(c)
-          store.dispatch('setAuth',false)
-        })
+        } else {
+          store.dispatch('setAuth', false)
+        }
 
-
+      }).catch(c => {
+        console.log(c)
+        store.dispatch('setAuth', false)
       })
-    
+
+      axios.get(api_url + "getArticleByAuthor", {
+        headers: {
+          'token': `${token}`
+        }
+      }).then(response => {
+        articles.value = response.data
+      })
+
+
+    })
+
     const submit = async () => {
       const title = data.title;
       const description = data.description;
       console.log(data);
       axios
-        .post(api_url+"Article", {
-          title,description},{
-            headers:{'token': `${token}`}
-          }
-          
-          )
+        .post(api_url + "Article", {
+          title, description
+        }, {
+          headers: { 'token': `${token}` }
+        }
+
+        )
         .then((response) => {
           console.log(response);
-          if (response){
+          if (response) {
             router.push("/");
           }
-          
-          
+
+
         })
         .catch((err) => {
           console.log(err);
         });
     };
-    
 
-    return {data,submit};
+    const deleteSubmit = async () => {
+      const id = selected.value.id.$oid
+      axios.post(api_url + "deleteArticle", {
+        id
+      }, {
+        headers: { 'token': `${token}` }
+      })
+      
+      router.push("/")
+    }
+
+
+    return { data, submit, articles, deleteSubmit, selected };
   },
 };
 </script>

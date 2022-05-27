@@ -10,6 +10,7 @@ import datetime
 from passlib.hash import sha256_crypt
 from flask_cors import CORS
 import sys
+from flasgger import Swagger
 
 def token_required(f):
     @wraps(f)
@@ -43,7 +44,7 @@ def token_required(f):
 
 app = Flask(__name__)
 CORS(app, supports_credentials=true)
-
+swagger = Swagger(app)
 
 app.config["MONGODB_HOST"] = "mongodb+srv://iremtopcam:iremtopcam@cluster0.jxdlp.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 app.config["SECRET_KEY"] = "abc123"
@@ -54,12 +55,40 @@ mongo.init_app(app)
 
 @app.route('/', methods=['GET'])
 def helloworld():
+    """Example endpoint returning a list of colors by palette
+    This is using docstrings for specifications.
+    ---
+    parameters:
+      - name: palette
+        in: path
+        type: string
+        enum: ['all', 'rgb', 'cmyk']
+        required: true
+        default: all
+    definitions:
+      Palette:
+        type: object
+        properties:
+          palette_name:
+            type: array
+            items:
+              $ref: '#/definitions/Color'
+      Color:
+        type: string
+    responses:
+      200:
+        description: A list of colors (may be filtered by palette)
+        schema:
+          $ref: '#/definitions/Palette'
+        examples:
+          rgb: ['red', 'green', 'blue']
+    """
     return "api Server is ready"
 
 # register islemleri
 # user işlemleri usera post request atınca registerı gerceklestirdim.
 # register islemleri
-# username aynı olursa hata kodunu fronta yansıt
+
 
 
 @app.route('/Register', methods=["POST"])
@@ -110,7 +139,7 @@ def logout(current_user):
     return jsonify({"message": True})
 
 
-@app.route('/deleteUser', methods=['POST'])  # delete http methoduyla belirt
+@app.route('/deleteUser', methods=['POST'])  
 def deleteUser():
     if request.method == "POST":
         username = request.json['username']
@@ -133,7 +162,7 @@ def updateUser(current_user):
                 user = User.objects.get(id=_id)
                 user.update(author=author)
             else:
-                email = request.json['email']  # acıklama dondurmeli .get metodu
+                email = request.json['email']  
                 password = request.json['password']  # varsa degeri ypksa none YILDIZ
                 user = User.objects.get(id=_id)
                 user.update(email=email, password=password)
@@ -189,6 +218,18 @@ def getArticle():
     if request.method == "GET":
         articles = []
         for article in Article.objects:
+            articles.append(article)
+
+        articles.sort(key=lambda x:x.vote,reverse=1)
+        return make_response(jsonify(articles))
+
+@app.route('/getArticleByAuthor', methods=["GET"])
+@token_required
+def getArticleByUser(current_user):
+    if request.method == "GET":
+        author = current_user["username"]
+        articles = []
+        for article in Article.objects(author=author):
             articles.append(article)
 
         articles.sort(key=lambda x:x.vote,reverse=1)
@@ -308,10 +349,11 @@ def downvote(currentUser):
             return {'message': 'warning'}
 
 
-@app.route('/deleteArticle', methods=['POST', "GET"])
-def deleteArticle():
+@app.route('/deleteArticle', methods=['POST'])
+@token_required
+def deleteArticle(current_user):
     if request.method == "POST":
-        _id = request.json['_id']
+        _id = request.json['id']
         article = Article.objects.get(id=_id)
         Article.delete(article)
 

@@ -12,7 +12,7 @@
             <h2>Hakkımızda</h2>
             <hr>
             <br>
-            <h5>Bu blog projesinin Backendi bir python micro frameworkü olan flaskla , frontendi ise javascript kütüphanesi olan vue.jsle İrem topcam tarafından yazılmıştır.</h5>
+            <h5> intern blog sitesine HOSGELDİNİZ ....</h5>
           </div>
         </div>
       </div>
